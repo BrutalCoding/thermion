@@ -98,6 +98,19 @@
 #include "TimeIt.hpp"
 #include "UnprojectTexture.hpp"
 
+#include <jni.h>
+#include <android/native_window_jni.h>
+#include <android/native_activity.h>
+#include <android/log.h>
+#include "private/backend/VirtualMachineEnv.h"
+
+extern "C" { 
+  void filament_VirtualMachineEnv_JNI_OnLoad(JavaVM *vm, void *reserved) {
+    ::filament::VirtualMachineEnv::JNI_OnLoad(vm);
+    Log("JNI_OnLoad");
+  }
+}
+
 namespace thermion
 {
 
@@ -671,7 +684,7 @@ namespace thermion
     // bloom can be a bit glitchy (some Intel iGPUs won't render when postprocessing is enabled and bloom is disabled,
     // and render targets on MacOS flicker when bloom is disabled.  
     // Here, we enable bloom, but set to 0 strength
-    view->setBloomOptions({.strength = 0, .enabled=true });
+    view->setBloomOptions({.strength = 0, .enabled=false });
     view->setShadowingEnabled(false);
     view->setScreenSpaceRefractionEnabled(false);
     view->setPostProcessingEnabled(false);
