@@ -262,13 +262,22 @@ class ThermionViewerFFI extends ThermionViewer {
     return out;
   }
 
+  double _msPerFrame = 1000.0 / 60.0;
+
+  ///
+  ///
+  ///
+  double get msPerFrame {
+    return _msPerFrame;
+  }
+
   ///
   ///
   ///
   @override
   Future setFrameRate(int framerate) async {
-    final interval = 1000.0 / framerate;
-    set_frame_interval_render_thread(_viewer!, interval);
+    _msPerFrame = 1000.0 / framerate;
+    set_frame_interval_render_thread(_viewer!, _msPerFrame);
   }
 
   final _onDispose = <Future Function()>[];
@@ -1666,9 +1675,6 @@ class ThermionViewerFFI extends ThermionViewer {
     if (assetPtr == nullptr) {
       throw Exception("Failed to create geometry");
     }
-
-  print(" is shadow caster : ${RenderableManager_isShadowCaster(_renderableManager!,  SceneAsset_getEntity(assetPtr))}  is shadow recevier : ${RenderableManager_isShadowReceiver(_renderableManager!,  SceneAsset_getEntity(assetPtr))} " );
-
     var asset = FFIAsset(
         assetPtr, _sceneManager!, _engine!, _unlitMaterialProvider!, this);
 
