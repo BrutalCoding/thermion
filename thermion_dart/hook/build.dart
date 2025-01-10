@@ -92,6 +92,7 @@ void main(List<String> args) async {
       "utils",
       "filabridge",
       "gltfio_core",
+      if(config.targetOS != OS.android)
       "gltfio",
       "filament-iblprefilter",
       "image",
@@ -314,6 +315,9 @@ Future<Directory> getLibDir(BuildConfig config, Logger logger) async {
   // However, if you know what you're doing, you can change "release" to "debug" below.
   // TODO - check if we can pass this as a CLI compiler flag
   var mode = "release";
+
+  
+  
   if ({OS.windows, OS.macOS}.contains(config.targetOS)) {
     mode = config.buildMode == BuildMode.debug ? "debug" : "release";
   }
