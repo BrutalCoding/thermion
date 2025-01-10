@@ -89,10 +89,59 @@ extern "C"
     static jclass g_pluginClass = nullptr;
     static jobject g_pluginObject = nullptr;
     static jmethodID g_loadResourceMethod = nullptr;
+    static jmethodID g_renderCallbackMethod = nullptr;
 
     // Global map to store global references to ByteBuffers
     static std::unordered_map<int32_t, jobject> g_bufferRefs;
     static int32_t _lastId = -1;
+
+    void nativeRenderCallback(void *owner)
+    {
+        JNIEnv *env = getEnv();
+        if (!env || !g_pluginObject || !g_renderCallbackMethod)
+        {
+            __android_log_print(ANDROID_LOG_ERROR, "ThermionFlutterAndroid",
+                                "Invalid JNI state in nativeRenderCallback");
+            return;
+        }
+
+        // Call the Java renderCallback method
+        env->CallVoidMethod(g_pluginObject, g_renderCallbackMethod);
+
+        // Check for exceptions
+        if (env->ExceptionCheck())
+        {
+            __android_log_print(ANDROID_LOG_ERROR, "ThermionFlutterAndroid",
+                                "Exception occurred in render callback");
+            env->ExceptionDescribe();
+            env->ExceptionClear();
+        }
+    }
+
+    JNIEXPORT jlong JNICALL
+    Java_dev_thermion_android_ThermionFlutterPlugin_getRenderCallbackFunction(
+        JNIEnv *env, jobject thiz)
+    {
+        // Get the renderCallback method ID if we haven't already
+        if (g_renderCallbackMethod == nullptr)
+        {
+            g_renderCallbackMethod = env->GetMethodID(
+                g_pluginClass,
+                "renderCallback",
+                "()V");
+
+            if (env->ExceptionCheck())
+            {
+                __android_log_print(ANDROID_LOG_ERROR, "ThermionFlutterAndroid",
+                                    "Failed to get renderCallback method");
+                env->ExceptionDescribe();
+                env->ExceptionClear();
+                return 0;
+            }
+        }
+
+        return reinterpret_cast<jlong>(&nativeRenderCallback);
+    }
 
     ResourceBuffer nativeLoadResourceCallback(const char *path, void *owner)
     {

@@ -34,6 +34,7 @@ class ThermionFlutterPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, Ac
 
     external fun getNativeWindowFromSurface(surface: Any): Long
     external fun makeResourceLoaderWrapper() : Long
+    external fun getRenderCallbackFunction() : Long
 
     private lateinit var channel: MethodChannel
     private lateinit var flutterPluginBinding: FlutterPlugin.FlutterPluginBinding
@@ -46,9 +47,6 @@ class ThermionFlutterPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, Ac
         val surface: Surface
     )
 
-    var _surfaceTexture: SurfaceTexture? = null
-    private var _surfaceTextureEntry: SurfaceTextureEntry? = null
-    var _surface: Surface? = null
     private val textures: MutableMap<Long, TextureEntry> = mutableMapOf()
 
     private var nativePtr: Long = 0
@@ -92,6 +90,17 @@ class ThermionFlutterPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, Ac
         }
     }
 
+    @JvmName("renderCallback")
+    public final fun renderCallback() {
+     /*   val firstEntry = textures.values.firstOrNull()
+        if(firstEntry != null) {
+            firstEntry.surfaceTexture.updateTexImage()
+            Log.i("thermion_flutter", "updated")
+        } else {
+            Log.i("thermion_flutter", "skipping render callback")
+        } */
+        //Log.i("thermion_flutter", "render callback")
+    }
 
     @RequiresApi(Build.VERSION_CODES.M)
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
@@ -109,11 +118,15 @@ class ThermionFlutterPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, Ac
                 
                 Log.i("thermion_flutter", "Creating SurfaceTexture ${width}x${height}")
                 
-                val surfaceTextureEntry = flutterPluginBinding.textureRegistry.createSurfaceTexture()
-                val surfaceTexture = surfaceTextureEntry.surfaceTexture()
+                val surfaceTexture = SurfaceTexture(0, false)
+                surfaceTexture.setOnFrameAvailableListener { texture ->
+                    Log.i("thermion_flutter", "New frame available for texture")
+                }
+                val surfaceTextureEntry = flutterPluginBinding.textureRegistry.registerSurfaceTexture(surfaceTexture)
                 surfaceTexture.setDefaultBufferSize(width, height)
                 
                 val surface = Surface(surfaceTexture)
+                surface.setFrameRate(30.0f, Surface.FRAME_RATE_COMPATIBILITY_FIXED_SOURCE)
                 
                 if (!surface.isValid) {
                     result.error("SURFACE_INVALID", "Failed to create valid surface", null)
@@ -135,7 +148,13 @@ class ThermionFlutterPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, Ac
             }
             "markTextureFrameAvailable" -> {
                 val textureId = (call.arguments as Int).toLong()
+                //Log.i("thermion_flutter", "markTextureFrameAvailable")
                 if (textures.containsKey(textureId)) {
+                    /*try {
+                        textures[textureId]!!.surfaceTexture.releaseTexImage()
+                    } catch (e: Exception) {
+                        Log.i("thermion_flutter", "Error updating tex image")
+                    } */
                     result.success(null)
                 } else {
                     result.error("TEXTURE_NOT_FOUND", "Texture with id $textureId not found", null)
@@ -152,7 +171,7 @@ class ThermionFlutterPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, Ac
                 result.success(null)
             }
             "getRenderCallback" -> {
-                result.success(listOf(0, 0))
+                result.success(listOf(getRenderCallbackFunction(), 0))
             }
             else -> {
                 result.notImplemented()
