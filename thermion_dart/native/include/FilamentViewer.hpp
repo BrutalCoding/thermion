@@ -137,8 +137,6 @@ namespace thermion
         Texture *_iblTexture = nullptr;
         IndirectLight *_indirectLight = nullptr;
 
-        float _frameInterval = 1000.0 / 60.0;
-
         // Camera properties
         Camera *_mainCamera = nullptr; // the default camera added to every scene. If you want the *active* camera, access via View.
         
@@ -159,10 +157,8 @@ namespace thermion
         void loadTextureFromPath(std::string path);
         void savePng(void *data, size_t size, int frameNumber);
         void createBackgroundImage();
-
         
         time_point_t _fpsCounterStartTime = std::chrono::high_resolution_clock::now();
-
 
         std::mutex _imageMutex;
         double _cumulativeAnimationUpdateTime = 0;
