@@ -57,7 +57,14 @@ class ThermionFlutterMethodChannelPlatform extends ThermionFlutterPlatform {
         ? nullptr
         : Pointer<Void>.fromAddress(sharedContext);
 
+    var renderCallback =
+        await channel.invokeMethod("getRenderCallback") as List;
+
     viewer = ThermionViewerFFI(
+        renderCallback:
+            Pointer<NativeFunction<Void Function(Pointer<Void>)>>.fromAddress(
+                renderCallback[0]),
+        renderCallbackOwner: Pointer<Void>.fromAddress(renderCallback[1]),
         resourceLoader: resourceLoader,
         driver: driverPtr,
         sharedContext: sharedContextPtr,
@@ -96,8 +103,8 @@ class ThermionFlutterMethodChannelPlatform extends ThermionFlutterPlatform {
     final hardwareId = result[1] as int;
     var window = result[2] as int?; // usually 0 for nullptr
 
-    return PlatformTextureDescriptor(flutterId, hardwareId, window, width, height);
-      
+    return PlatformTextureDescriptor(
+        flutterId, hardwareId, window, width, height);
   }
 
   @override
@@ -111,7 +118,6 @@ class ThermionFlutterMethodChannelPlatform extends ThermionFlutterPlatform {
   Future<PlatformTextureDescriptor?> createTextureAndBindToView(
       t.View view, int width, int height) async {
     var descriptor = await createTextureDescriptor(width, height);
-    
 
     if (Platform.isWindows) {
       if (_swapChain != null) {
@@ -119,8 +125,8 @@ class ThermionFlutterMethodChannelPlatform extends ThermionFlutterPlatform {
         await viewer!.destroySwapChain(_swapChain!);
       }
 
-      _swapChain =
-          await viewer!.createHeadlessSwapChain(descriptor.width, descriptor.height);
+      _swapChain = await viewer!
+          .createHeadlessSwapChain(descriptor.width, descriptor.height);
     } else if (Platform.isAndroid) {
       if (_swapChain != null) {
         await view.setRenderable(false, _swapChain!);
@@ -140,18 +146,25 @@ class ThermionFlutterMethodChannelPlatform extends ThermionFlutterPlatform {
 
   @override
   Future markTextureFrameAvailable(PlatformTextureDescriptor texture) async {
-    await channel.invokeMethod("markTextureFrameAvailable", texture.flutterTextureId);
+    await channel.invokeMethod(
+        "markTextureFrameAvailable", texture.flutterTextureId);
   }
 
   @override
-  Future<PlatformTextureDescriptor> resizeTexture(PlatformTextureDescriptor texture,
-      t.View view, int width, int height) async {
+  Future<PlatformTextureDescriptor> resizeTexture(
+      PlatformTextureDescriptor texture,
+      t.View view,
+      int width,
+      int height) async {
     var newTexture = await createTextureAndBindToView(view, width, height);
     if (newTexture == null) {
       throw Exception();
     }
-
-    await destroyTextureDescriptor(texture);
+    try {
+      await destroyTextureDescriptor(texture);
+    } catch (err) {
+      _logger.severe(err);
+    }
 
     return newTexture;
   }
