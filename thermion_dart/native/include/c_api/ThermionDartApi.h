@@ -50,6 +50,7 @@ extern "C"
 	EMSCRIPTEN_KEEPALIVE TRenderableManager *Engine_getRenderableManager(TEngine *engine);
 	EMSCRIPTEN_KEEPALIVE TLightManager *Engine_getLightManager(TEngine *engine);
 	EMSCRIPTEN_KEEPALIVE TEntityManager *Engine_getEntityManager(TEngine *engine);
+	EMSCRIPTEN_KEEPALIVE void Engine_setAutomaticInstancing(TEngine *engine, bool enabled);
 	
 	EMSCRIPTEN_KEEPALIVE TMaterial *Engine_buildMaterial(TEngine *tEngine, const uint8_t* materialData, size_t length);
 	EMSCRIPTEN_KEEPALIVE void Engine_destroyMaterial(TEngine *tEngine, TMaterial *tMaterial);

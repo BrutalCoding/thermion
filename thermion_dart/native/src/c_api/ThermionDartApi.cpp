@@ -490,4 +490,9 @@ extern "C"
         auto *material = reinterpret_cast<Material *>(tMaterial);
         engine->destroy(material);
     }
+
+    EMSCRIPTEN_KEEPALIVE void Engine_setAutomaticInstancing(TEngine *tEngine, bool enabled) { 
+        auto *engine = reinterpret_cast<Engine *>(tEngine);
+        engine->setAutomaticInstancingEnabled(enabled);
+    }
 }
